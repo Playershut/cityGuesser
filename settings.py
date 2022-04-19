@@ -5,6 +5,8 @@ from discord import Embed, Color
 
 from data import db_session
 from data.players import Player
+from data.settings import Settings
+from data.ranks import Ranks
 
 import sqlalchemy
 
@@ -84,6 +86,13 @@ game_stopped_embed = Embed(title='Игра успешно остановлена
                            color=Color.darker_grey())
 
 CITIES = ['Москва', 'Санкт-Петербург', 'Оренбург', 'Улан-Удэ']
+
+def get_formatted_city_name(city):
+    response = requests.get(URL + city).json()
+    response = response['response']['GeoObjectCollection']['featureMember'][0]
+    formatted_city_name = response['GeoObject']['metaDataProperty']['GeocoderMetaData']['text']
+    return formatted_city_name
+
 
 URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={apikey}&format=json&geocode='
 IMG_URL = 'https://static-maps.yandex.ru/1.x/?'

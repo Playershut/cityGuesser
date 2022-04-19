@@ -5,8 +5,7 @@ class MOBotClient(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.chosen_city = ''
-        self.game_in_progress = False
+        self.settings = DB_SESS.query(Settings).first()
 
     # используется для отправки карточки со списком команд
     @commands.command(name='help', aliases=['h', 'помощь', 'п'])
@@ -16,10 +15,11 @@ class MOBotClient(commands.Cog):
     #  используется для начала игры
     @commands.command(name='start_city_guessing', aliases=['scg', 'начать_угадывание_города', 'нуг'])
     async def start_city_guessing(self, ctx):
-        if not self.game_in_progress:
-            self.chosen_city = choice(CITIES)
-            self.game_in_progress = True
-            response = requests.get(URL + self.chosen_city).json()
+        if not self.settings.game_in_progress:
+            self.settings.chosen_city = choice(CITIES)
+            self.settings.game_in_progress = True
+            DB_SESS.commit()
+            response = requests.get(URL + self.settings.chosen_city).json()
             response = response['response']['GeoObjectCollection']['featureMember'][0]
             response = response['GeoObject']['boundedBy']['Envelope']
             lll_param = ','.join(response['lowerCorner'].split())
@@ -32,20 +32,22 @@ class MOBotClient(commands.Cog):
 
     # используется для угадывания города игроком
     @commands.command(name='city_guess', aliases=['cg', 'угадать_город', 'уг'])
-    async def city_guess(self, ctx, city=None):
-        if not self.game_in_progress:
+    async def city_guess(self, ctx, *city):
+        if not self.settings.game_in_progress:
             await ctx.channel.send(embed=not_game_embed)
 
         else:
             if city:
-                if city.lower() == self.chosen_city.lower():
+                if get_formatted_city_name('+'.join(city)) == \
+                        get_formatted_city_name(self.settings.chosen_city):
                     await self.player_stats_calc(ctx.author.id)
                     await ctx.channel.send(embed=win_embed)
                 else:
                     await ctx.channel.send(embed=lose_embed)
 
-                self.chosen_city = ''
-                self.game_in_progress = False
+                self.settings.chosen_city = ''
+                self.settings.game_in_progress = False
+                DB_SESS.commit()
             else:
                 await ctx.channel.send(embed=not_city_get_embed)
 
@@ -65,6 +67,8 @@ class MOBotClient(commands.Cog):
         player.money += 10
         player.cities_guessed += 1
         player.level = len(format(player.cities_guessed, 'b'))
+        player.rank = f'{DB_SESS.query(Ranks.rank).filter(Ranks.id == player.level % RANKS_COUNT).first()[0]}' \
+                      f'{"+" * (player.level // RANKS_COUNT)}'
         DB_SESS.commit()
 
     # используется для отображения статистики игрока
@@ -81,14 +85,16 @@ class MOBotClient(commands.Cog):
     # используется для остановки игры
     @commands.command(name='stop', aliases=['s', 'стоп', 'с'])
     async def stop(self, ctx):
-        self.chosen_city = ''
-        self.game_in_progress = False
+        self.settings.chosen_city = ''
+        self.settings.game_in_progress = False
+        DB_SESS.commit()
         await ctx.channel.send(embed=game_stopped_embed)
 
 
 if __name__ == '__main__':
-    db_session.global_init("db/players.db")
+    db_session.global_init("db/city_guesser.db")
     DB_SESS = db_session.create_session()
+    RANKS_COUNT = DB_SESS.query(Ranks).count()
     bot = commands.Bot(command_prefix='$', help_command=None)
     bot.add_cog(MOBotClient(bot))
     bot.run(TOKEN)
