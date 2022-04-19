@@ -36,17 +36,18 @@ class MOBotClient(commands.Cog):
         if not self.game_in_progress:
             await ctx.channel.send(embed=not_game_embed)
 
-        if city:
-            if city.lower() == self.chosen_city.lower():
-                await self.player_stats_calc(ctx.author.id)
-                await ctx.channel.send(embed=win_embed)
-            else:
-                await ctx.channel.send(embed=lose_embed)
-
-            self.chosen_city = ''
-            self.game_in_progress = False
         else:
-            await ctx.channel.send(embed=not_city_get_embed)
+            if city:
+                if city.lower() == self.chosen_city.lower():
+                    await self.player_stats_calc(ctx.author.id)
+                    await ctx.channel.send(embed=win_embed)
+                else:
+                    await ctx.channel.send(embed=lose_embed)
+
+                self.chosen_city = ''
+                self.game_in_progress = False
+            else:
+                await ctx.channel.send(embed=not_city_get_embed)
 
     # используется для подсчета и изменения статистики игрока
     async def player_stats_calc(self, author_id):
@@ -74,7 +75,8 @@ class MOBotClient(commands.Cog):
                                            description=f'Уровень: {player.level}\n'
                                                        f'Ранг: {player.rank}\n'
                                                        f'Угадано городов: {player.cities_guessed}\n'
-                                                       f'Баланс: {player.money}'))
+                                                       f'Баланс: {player.money}',
+                                           color=Color.dark_teal()))
 
     # используется для остановки игры
     @commands.command(name='stop', aliases=['s', 'стоп', 'с'])
