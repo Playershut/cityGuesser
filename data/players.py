@@ -7,7 +7,7 @@ class Player(SqlAlchemyBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     user_id = sqlalchemy.Column(sqlalchemy.String, index=True, nullable=False, unique=True)
-    money = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    money = sqlalchemy.Column(sqlalchemy.INTEGER, nullable=False)
     cities_guessed = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     level = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     rank = sqlalchemy.Column(sqlalchemy.String, nullable=False)

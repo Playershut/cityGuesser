@@ -8,3 +8,4 @@ class Roles(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     role_id = sqlalchemy.Column(sqlalchemy.INTEGER, nullable=False)
     cost = sqlalchemy.Column(sqlalchemy.INTEGER, nullable=False)
+    guild_id = sqlalchemy.Column(sqlalchemy.INTEGER, nullable=False)
