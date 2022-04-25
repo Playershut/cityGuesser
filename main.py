@@ -80,7 +80,7 @@ class MOBotClient(commands.Cog):
         else:
             player.level = round(log(player.cities_guessed, 1.5))
         player.money += 10 + (player.level - 1)
-        player.rank = f'{DB_SESS.query(Ranks.rank).filter(Ranks.id == player.level % RANKS_COUNT).first()[0]}' \
+        player.rank = f'{DB_SESS.query(Ranks.rank).filter(Ranks.id == (player.level % RANKS_COUNT)).first()[0]}' \
                       f'{"+" * (player.level // RANKS_COUNT)}'
         DB_SESS.commit()
         if last_player_level < player.level:
@@ -285,10 +285,9 @@ class MOBotClient(commands.Cog):
         await ctx.channel.send(embed=city_image_embed)
 
     # используется для отображения общего топа 10 игры по угаданным городам
-    @commands.command(name='top', aliases=['t','топ','т'])
+    @commands.command(name='top', aliases=['t', 'топ', 'т'])
     async def top(self, ctx):
         players_ids = DB_SESS.query(Player.user_id).order_by(-Player.cities_guessed).all()
-        print(players_ids)
         max_top_num = len(players_ids) if len(players_ids) < 10 else 10
         top_desc = ''
         for i in range(0, max_top_num):
